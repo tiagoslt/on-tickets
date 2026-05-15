@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+venv/
+.env
+
+# Django
+staticfiles/
+media/
+
+# Node
+node_modules/
+.next/
+.env.local
+.env.production
+
+# Docker
+postgres_data/
+
+# OS
+.DS_Store
+*.swp

@@ -26,10 +26,10 @@ interface TicketTableProps {
 
 const statusOptions = [
   { value: '', label: 'Todos os status' },
-  { value: 'aberto', label: 'Aberto' },
-  { value: 'em_andamento', label: 'Em Andamento' },
+  { value: 'aberto', label: 'A Distribuir' },
+  { value: 'em_andamento', label: 'Em Atendimento' },
   { value: 'aguardando_cliente', label: 'Aguardando Cliente' },
-  { value: 'resolvido', label: 'Resolvido' },
+  { value: 'resolvido', label: 'Concluído' },
 ]
 
 const priorityOptions = [
@@ -132,7 +132,7 @@ export function TicketTable({
                   {user?.role !== 'analista' && (
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Analista</th>
                   )}
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Criado em</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Distribuído em</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">SLA</th>
                   <th className="w-8"></th>
                 </tr>

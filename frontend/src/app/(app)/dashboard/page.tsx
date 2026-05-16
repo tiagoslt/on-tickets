@@ -1,9 +1,8 @@
 'use client'
 
-// Dashboard com KPIs baseados no papel do usuário
 import React from 'react'
 import Link from 'next/link'
-import { Ticket, Clock, CheckCircle, AlertTriangle, TrendingUp, Plus } from 'lucide-react'
+import { Ticket, Clock, CheckCircle, AlertTriangle, TrendingUp, Plus, Download } from 'lucide-react'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { VolumeChart } from '@/components/analytics/VolumeChart'
 import { AnalystPerformanceTable } from '@/components/analytics/AnalystPerformanceTable'
@@ -16,6 +15,54 @@ import { StatusBadge } from '@/components/tickets/StatusBadge'
 import { PriorityBadge } from '@/components/tickets/PriorityBadge'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import api from '@/lib/api'
+import { PaginatedResponse, Ticket as TicketType } from '@/types'
+
+const STATUS_LABELS: Record<string, string> = {
+  aberto: 'A Distribuir',
+  em_andamento: 'Em Atendimento',
+  aguardando_cliente: 'Aguardando Cliente',
+  resolvido: 'Concluído',
+}
+
+const PRIORITY_LABELS: Record<string, string> = {
+  baixa: 'Baixa',
+  media: 'Média',
+  alta: 'Alta',
+  critica: 'Crítica',
+}
+
+async function exportToExcel() {
+  const { utils, writeFile } = await import('xlsx')
+
+  // Busca todos os tickets sem paginação
+  let allTickets: TicketType[] = []
+  let page = 1
+  while (true) {
+    const res = await api.get<PaginatedResponse<TicketType>>(`/api/tickets/?page=${page}`)
+    allTickets = allTickets.concat(res.data.results)
+    if (!res.data.next) break
+    page++
+  }
+
+  const rows = allTickets.map((t) => ({
+    'Nº Ticket': t.ticket_number,
+    'Cliente': t.client?.name ?? '',
+    'Status': STATUS_LABELS[t.status] ?? t.status,
+    'Prioridade': PRIORITY_LABELS[t.priority] ?? t.priority,
+    'Responsável': t.assigned_to?.full_name ?? '',
+    'Distribuído por': t.created_by?.full_name ?? '',
+    'Distribuído em': format(new Date(t.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+    'Concluído em': t.resolved_at ? format(new Date(t.resolved_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '',
+    'Link': t.ticket_link ?? '',
+    'Descrição': t.description ?? '',
+  }))
+
+  const ws = utils.json_to_sheet(rows)
+  const wb = utils.book_new()
+  utils.book_append_sheet(wb, ws, 'Tickets')
+  writeFile(wb, `on-tickets-${format(new Date(), 'yyyy-MM-dd')}.xlsx`)
+}
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -25,7 +72,6 @@ export default function DashboardPage() {
   const { data: analystData, isLoading: analystLoading } = useAnalystPerformance()
   const { data: volumeData, isLoading: volumeLoading } = useVolumeData()
 
-  // Para analistas: busca apenas seus tickets recentes
   const { data: myTickets } = useTickets({ page: 1 })
 
   return (
@@ -47,9 +93,9 @@ export default function DashboardPage() {
           variant="yellow"
         />
         <StatCard
-          title="Resolvidos Hoje"
+          title="Concluídos Hoje"
           value={summaryLoading ? '...' : (summary?.resolvidos_hoje ?? 0)}
-          subtitle={`de ${summary?.por_status.resolvido ?? 0} resolvidos no total`}
+          subtitle={`de ${summary?.por_status.resolvido ?? 0} concluídos no total`}
           icon={CheckCircle}
           variant="green"
         />
@@ -69,7 +115,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader
               title="Volume de Tickets"
-              subtitle="Criados vs. resolvidos nos últimos 30 dias"
+              subtitle="Distribuídos vs. concluídos nos últimos 30 dias"
             />
             <VolumeChart
               data={volumeData?.dados ?? []}
@@ -93,7 +139,7 @@ export default function DashboardPage() {
                   { label: 'Abertos', value: summary.por_status.aberto, color: 'bg-blue-500', pct: summary.total ? Math.round(summary.por_status.aberto / summary.total * 100) : 0 },
                   { label: 'Em Andamento', value: summary.por_status.em_andamento, color: 'bg-yellow-500', pct: summary.total ? Math.round(summary.por_status.em_andamento / summary.total * 100) : 0 },
                   { label: 'Aguardando Cliente', value: summary.por_status.aguardando_cliente, color: 'bg-cyan-500', pct: summary.total ? Math.round(summary.por_status.aguardando_cliente / summary.total * 100) : 0 },
-                  { label: 'Resolvidos', value: summary.por_status.resolvido, color: 'bg-green-500', pct: summary.total ? Math.round(summary.por_status.resolvido / summary.total * 100) : 0 },
+                  { label: 'Concluídos', value: summary.por_status.resolvido, color: 'bg-green-500', pct: summary.total ? Math.round(summary.por_status.resolvido / summary.total * 100) : 0 },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-3">
                     <div className="flex-1">
@@ -148,11 +194,21 @@ export default function DashboardPage() {
         <CardHeader
           title={isGestorOrAdmin ? 'Tickets Recentes' : 'Meus Tickets Recentes'}
           action={
-            <Link href="/tickets/new">
-              <Button size="sm" leftIcon={<Plus className="w-4 h-4" />}>
-                Novo Ticket
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                leftIcon={<Download className="w-4 h-4" />}
+                onClick={exportToExcel}
+              >
+                Exportar Excel
               </Button>
-            </Link>
+              <Link href="/tickets/new">
+                <Button size="sm" leftIcon={<Plus className="w-4 h-4" />}>
+                  Novo Ticket
+                </Button>
+              </Link>
+            </div>
           }
         />
         {myTickets?.results && myTickets.results.length > 0 ? (

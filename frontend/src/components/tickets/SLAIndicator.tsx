@@ -52,13 +52,13 @@ const stateConfig: Record<SLAState, {
     dotClass: 'bg-red-500',
   },
   resolved_ok: {
-    label: 'Resolvido no prazo',
+    label: 'Concluído no prazo',
     icon: CheckCircle,
     className: 'text-green-700 bg-green-50',
     dotClass: 'bg-green-500',
   },
   resolved_breached: {
-    label: 'Resolvido fora do prazo',
+    label: 'Concluído fora do prazo',
     icon: XCircle,
     className: 'text-red-700 bg-red-50',
     dotClass: 'bg-red-500',

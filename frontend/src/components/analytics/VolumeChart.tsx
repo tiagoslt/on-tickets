@@ -98,7 +98,7 @@ export function VolumeChart({ data, agrupamento, isLoading = false }: VolumeChar
         <Legend
           formatter={(value) => (
             <span className="text-sm text-gray-600">
-              {value === 'total' ? 'Total Criados' : 'Resolvidos'}
+              {value === 'total' ? 'Total Distribuídos' : 'Concluídos'}
             </span>
           )}
         />

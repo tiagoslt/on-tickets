@@ -35,10 +35,10 @@ import api from '@/lib/api'
 import { User as UserType, TicketStatus } from '@/types'
 
 const statusOptions = [
-  { value: 'aberto', label: 'Aberto' },
-  { value: 'em_andamento', label: 'Em Andamento' },
+  { value: 'aberto', label: 'A Distribuir' },
+  { value: 'em_andamento', label: 'Em Atendimento' },
   { value: 'aguardando_cliente', label: 'Aguardando Cliente' },
-  { value: 'resolvido', label: 'Resolvido' },
+  { value: 'resolvido', label: 'Concluído' },
 ]
 
 const fieldLabels: Record<string, string> = {
@@ -254,7 +254,7 @@ export default function TicketDetailPage() {
           <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2 text-sm text-green-700">
             <Clock className="w-4 h-4" />
             <span>
-              Resolvido em {format(new Date(ticket.resolved_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+              Concluído em {format(new Date(ticket.resolved_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
             </span>
           </div>
         )}
